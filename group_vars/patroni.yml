@@ -1,0 +1,116 @@
+#--- ETCD
+etcd_api_version: '2'
+etcd_config_format: 'yaml' # yaml|ini
+etcd_unit_type: 'without_conf' # with_conf|without_conf
+etcd_unit_template: "{{ 'etcd_unit.j2' if etcd_unit_type == 'with_conf' else 'etcd.service.j2' }}"
+etcd_download_url: 'https://github.com/etcd-io/etcd/releases/download/v3.4.21/etcd-v3.4.21-linux-amd64.tar.gz'
+etcd_download_dir: '/opt/etcd'
+etcd_archive_name: 'etcd.tar.gz'
+etcd_bin_path: '/usr/local/bin'
+etcd_data_dir: '/var/lib/etcd'
+etcd_conf_dir: '/etc/etcd'
+etcd_conf: "{{ 'etcd.yml' if etcd_config_format == 'yaml' else 'etcd.conf' }}"
+etcd_unit_path: '/lib/systemd/system'
+etcd_unit: 'etcd.service'
+etcd_service_type: 'notify'
+etcd_limit_nofile: '40000'
+etcd_user: 'etcd'
+etcd_group: 'etcd'
+etcd_client_port: '2379'
+etcd_peer_port: '2380'
+etcd_name: '{{ ansible_hostname }}'
+etcd_snapshot_count: '10000'
+etcd_heartbeat_interval: '100'
+etcd_election_timeout: '1000'
+etcd_quota_backend_bytes: '0'
+etcd_listen_peer_urls: 'http://0.0.0.0:{{ etcd_peer_port }}'
+etcd_listen_client_urls: 'http://0.0.0.0:{{ etcd_client_port }}'
+etcd_max_snapshots: '5'
+etcd_max_wals: '5'
+etcd_initial_advertise_peer_urls: 'http://{{etcd_name }}:{{ etcd_peer_port }}'
+etcd_advertise_client_urls: 'http://{{ etcd_name }}:{{ etcd_client_port }}'
+etcd_discovery_fallback: 'proxy' # proxy|exit
+etcd_initial_cluster: "{% for host in groups['etcd'] %}{{ hostvars[host]['ansible_facts']['hostname'] }}=http://{{ hostvars[host]['ansible_facts']['hostname'] }}:{{ etcd_peer_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+etcd_initial_cluster_token: 'ETCD-Postgres-01'
+etcd_initial_cluster_state: 'new' # usage: new|existing
+etcd_strict_reconfig_check: 'false'
+etcd_enable_v2: 'true'
+etcd_enable_pprof: 'true'
+etcd_proxy: 'off'
+etcd_proxy_failure_wait: '5000'
+etcd_proxy_refresh_interval: '30000'
+etcd_proxy_dial_timeout: '1000'
+etcd_proxy_write_timeout: '5000'
+etcd_proxy_read_timeout: '0'
+etcd_debug: 'false'
+etcd_logger: 'zap'
+etcd_force_new_cluster: 'false'
+etcd_auto_compaction_mode: 'periodic'
+etcd_auto_compaction_retention: '1'
+
+#--- Patroni
+cluster_name: "{{ ansible_hostname | regex_search('[a-z0-9]+') }}"
+pg_install_type: 'packages' # sources|packages
+pg_download: 'https://ftp.postgresql.org/pub/source/v14.6/postgresql-14.6.tar.gz'
+pg_download_dir: '/usr/local/src/postgres'
+pg_archive_name: 'postgresql.tar.gz'
+pg_major_version: '14'
+pg_group: 'postgres'
+pg_user: 'postgres'
+pg_base_dir: '/pg_data'
+pg_data_dir: '/pg_data/data' # default '/var/lib/postgresql/{{ pg_major_version }}/main' # '/pg/pgdata' will be used
+pg_bin_dir: '/usr/lib/postgresql/{{ pg_major_version }}/bin'
+pg_conf_dir: '{{ pg_data_dir }}' #'/var/lib/postgresql/{{ pg_major_version }}/main'
+pg_log_dir: '{{ pg_data_dir }}/pg_log'
+pg_unix_socket_dir: '/var/run/postgresql'
+pg_socket_path: '{{ pg_unix_socket_dir }}'
+pg_port: '5432'
+patroni_bin_dir: '/usr/bin'  #'/usr/local/bin' #'/usr/bin'
+patroni_conf_dir: '/etc/patroni'
+patroni_log_dir: '/pg_audit'
+patroni_conf: 'patroni.yml'
+patroni_service_type: 'simple'
+patroni_ip: '{{ ansible_default_ipv4.address }}'
+patroni_port: '8008'
+patroni_scope: "{{ ansible_hostname | regex_search('[a-z0-9]+') }}"
+patroni_dcs_type: 'etcd'
+patroni_namespace: 'db'
+patroni_nodename: '{{ ansible_hostname }}'
+patroni_restapi_listen: '0.0.0.0:{{ patroni_port }}'
+patroni_restapi_connect_address: '{{ patroni_ip }}:{{ patroni_port }}'
+patroni_etcd_hosts: "{% for host in groups['etcd'] %}{{ hostvars[host]['ansible_facts']['hostname'] }}:{{ etcd_client_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+patroni_etcd_username: 'root'
+patroni_etcd_password: "{{ lookup('password', 'credentials/{{ patroni_scope }}/patroni_etcd_password chars=ascii_letters,digits length=12') }}"
+patroni_restapi_username: 'patroni'
+patroni_restapi_password: "{{ lookup('password', 'credentials/{{ patroni_scope }}/patroni_restapi_password chars=ascii_letters,digits length=12') }}"
+patroni_postgresql_replication_username: 'replicator'
+patroni_postgresql_replication_password: "{{ lookup('password', 'credentials/{{ patroni_scope }}/patroni_postgresql_replication_password chars=ascii_letters,digits length=12') }}"
+patroni_postgresql_superuser_username: 'postgres'
+patroni_postgresql_superuser_password: "{{ lookup('password', 'credentials/{{ patroni_scope }}/patroni_postgresql_superuser_password chars=ascii_letters,digits length=12') }}"
+patroni_postgresql_rewind_username: 'rewind_user'
+patroni_postgresql_rewind_password: 'password'
+patroni_postgresql_rewind_password: "{{ lookup('password', 'credentials/{{ patroni_scope }}/patroni_postgresql_rewind_password chars=ascii_letters,digits length=12') }}"
+
+patroni_netmask: "{{ (ansible_default_ipv4.address + '/' + ansible_default_ipv4.netmask) | ipaddr('prefix') }}"
+vip_manager_service_type: 'simple'
+
+# sysctl options
+tcp_keepalive_time: '30'
+tcp_keepalive_intvl: '3'
+tcp_keepalive_probes: '20'
+swappiness: '10'
+dirty_expire_centisecs: '500'
+dirty_writeback_centisecs: '250'
+dirty_ratio: '10'
+dirty_background_ratio: '3'
+overcommit_memory: '2'
+nr_hugepages: '36000'
+
+# pgbackrest
+pgbackrest_user: 'pgbackrest'
+pgbackrest_group: 'pgbackrest'
+pgbackrest_gid: '5000'
+pgbackrest_uid: '5000'
+pgbackrest_ssh_key: 'ssh_keys/pgbackrest_key'
+postgresql_ssh_key: 'ssh_keys/postgresql_key'

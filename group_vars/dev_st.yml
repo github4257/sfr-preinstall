@@ -1,0 +1,66 @@
+---
+# defaults file for roles/patroni
+# vim: syntax=yaml tabstop=2 shiftwidth=2
+
+#--- Preinstall
+download_dir: 'downloads'
+astra_repo_url: 'deb https://dl.astralinux.ru/astra/stable/2.12_x86-64/repository orel main contrib non-free'
+debian_repo_url: 'deb https://mirror.corbina.net/debian/ buster main'
+key_server: 'keyserver.ununtu.com'
+keyserver: 'hkp://keyserver.ubuntu.com:80'
+debian_repo_keys:
+  - 648ACFD622F3D138
+  - 0E98404D386FA1D9
+  - DCC9EFBF77E11517
+astra_pg_default_release: 'buster-pgdg'
+other_pg_default_release: '{{ ansible_distribution_release }}-pgdg'
+pg_default_release: "{{ astra_pg_default_release if ansible_distribution | lower == 'astra linux' else other_pg_default_release }}"
+astra_pg_repo_url: 'deb http://apt.postgresql.org/pub/repos/apt buster-pgdg main'
+other_pg_repo_url: 'deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main'
+pg_repo_url: "{{ astra_pg_repo_url if ansible_distribution | lower == 'astra linux' else other_pg_repo_url }}"
+pg_repo_keys:
+  - 7FCC7D46ACCC4CF8
+astra_mamonsu_repo_url: 'deb https://repo.postgrespro.ru/mamonsu/astra-smolensk/1.7 1.7_x86-64 main'
+other_mamonsu_repo_url: 'deb https://repo.postgrespro.ru/mamonsu/{{ ansible_distribution | lower }}/{{ ansible_distribution_release }} main'
+
+mamonsu_repo_url: "{{ astra_mamonsu_repo_url if ansible_distribution | lower == 'astra linux' else other_mamonsu_repo_url }}"
+mamonsu_repo_keys:
+  - 7F9AE5A62D2DF0B4
+# Environment settings
+# WARNING:
+# Proxy, domain controllers, timeservers etc. must be created in the same project. If nodes from different projects end up on the same hypervisor, network connectivity is lost.
+timezone: '/usr/share/zoneinfo/Europe/Moscow'
+localtime: '/etc/localtime'
+use_proxy: 'true'
+#proxy_address: '10.169.0.6'
+proxy_address: '10.169.20.5'
+proxy_port: '3128'
+proxy: 'http://{{ proxy_address }}:{{ proxy_port }}'
+proxy_env:
+  http_proxy: '{{ proxy }}'
+  https_proxy: '{{ proxy }}'
+ntp1: '10.162.192.99'
+ntp2: '10.162.192.100'
+zabbix_server: '10.169.2.3,10.169.2.5'
+server_active: '10.169.2.3;10.169.2.5'
+
+domain_nameserver: '10.162.192.100'
+ns1: '10.162.192.100'
+ns2: '10.162.192.99'
+domain: 'dev.local'
+computer_ou: 'OU=Servers,OU=DEV.LOCAL,DC=dev,DC=local'
+admin_server: 'in-vpw-dcdev4.dev.local'
+kdc1: 'in-vpw-dcdev4.dev.local'
+kdc2: 'in-vpw-dcdev3.dev.local'
+dc_backup1: 'DC1.dev.local'
+dc_backup2: 'DC2.dev.local'
+join_user: 'kekarpukhin'
+join_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          62373131386433626562333037653038346364303638623536656135656263303631333536643262
+          3230303434626137326231336534353339623839313030640a313539633638373261363961366661
+          62613863356233623337613235356165653139356131613536393933336562613237343931336530
+          3034313137356531390a646261666638303234323563313539643533363530623532626566653834
+          6139
+simple_allow_groups: 'Test_Group'
+simple_allow_users: ''

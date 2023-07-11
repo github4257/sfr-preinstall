@@ -1,0 +1,5 @@
+{{ ansible_lo.ipv4.address }} localhost
+
+{% for host in groups['all'] %}
+{{ hostvars[host]['ansible_facts']['default_ipv4']['address'] }} {{ hostvars[host]['ansible_facts']['hostname'] }}
+{% endfor %}
