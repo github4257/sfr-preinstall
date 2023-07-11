@@ -1,0 +1,15 @@
+---
+# vim: syntax=yaml tabstop=2 shiftwidth=2
+# Configure hosts
+- name: 'configure /etc/hosts'
+  template:
+    src: 'hosts.j2'
+    dest: '/etc/hosts'
+    owner: root
+    group: root
+    mode: 0644
+    backup: true
+  tags: 
+    - preinstall
+    - hostsconfig
+...

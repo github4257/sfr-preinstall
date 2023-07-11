@@ -1,0 +1,26 @@
+---
+# vim: syntax=yaml tabstop=2 shiftwidth=2
+# Configure Astra Linux SE repository
+#- name: comment old repositoryes
+#  replace:
+#    path: /etc/apt/sources.list
+#    regexp: '^(\w.*$)'
+#    replace: '#\1'
+#  when: 
+#    - ansible_distribution == 'Astra Linux'
+#    - ansible_distribution_release == '1.7_x86-64'
+
+- name: configure astra-se repo
+  apt_repository:
+    repo: '{{ item }}'
+    state: present
+    install_python_apt: true
+  loop:
+    - '{{ astra_se_repo_main }}'
+    - '{{ astra_se_repo_update }}'
+    - '{{ astra_se_repo_base }}'
+    - '{{ astra_se_repo_extended }}'
+  when: 
+    - ansible_distribution == 'Astra Linux'
+    - ansible_distribution_release == '1.7_x86-64'
+...

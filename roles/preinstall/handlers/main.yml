@@ -1,0 +1,11 @@
+---
+# handlers file for roles/preinstall
+# vim: syntax=yaml tabstop=2 shiftwidth=2
+- name: systemd-resolved enabled
+  systemd:
+    name: systemd-resolved
+    state: restarted
+    enabled: true
+    daemon_reload: true
+    masked: false
+...
