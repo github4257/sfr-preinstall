@@ -1,0 +1,8 @@
+---
+# vim: syntax=yaml tabstop=2 shiftwidth=2
+- hosts: all
+  vars_files:
+    - group_vars/{{ env }}.yml
+  roles:
+    - { role: preinstall, tags: preinstall }
+...
